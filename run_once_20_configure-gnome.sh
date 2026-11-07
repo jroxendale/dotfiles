@@ -4,6 +4,9 @@ set -e
 
 echo "Configuring GNOME extensions..."
 
+# Suppress the Caffeine initialisation notification
+gsettings set org.gnome.shell.extensions.caffeine show-notifications false
+
 gnome-extensions enable appindicatorsupport@rgcjonas.gmail.com
 gnome-extensions enable bazaar-integration@kolunmi.github.io
 gnome-extensions enable blur-my-shell@aunetx
