@@ -2,10 +2,11 @@
 
 eval "$(/var/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-brew install eza \
-zoxide \
-bat \
-fd \
-ripgrep \
+brew install \
 atuin \
-gh
+bat \
+eza \
+fd \
+gh \
+ripgrep \
+zoxide
