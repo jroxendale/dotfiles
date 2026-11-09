@@ -25,23 +25,32 @@ done
 
 # Fetch, install and enable the latest Media Controller
 UUID="media-controller@naimur"
-GNOME_VER=$(gnome-shell --version | grep -oP '\d+' | head -n1)
-DOWNLOAD_URI=$(curl -s "https://extensions.gnome.org/extension-info/?uuid=${UUID}&shell_version=${GNOME_VER}" | jq -r '.download_url')
 
-if [ -n "$DOWNLOAD_URI" ] && [ "$DOWNLOAD_URI" != "null" ]; then
-    curl -sL "https://extensions.gnome.org${DOWNLOAD_URI}" -o /tmp/media-controller@naimur.zip
-    gnome-extensions install --force /tmp/media-controller@naimur.zip
-    rm -f /tmp/media-controller@naimur.zip
-    
-    # Inject Media Controller directly into the database
-    CURRENT_EXTS=$(gsettings get org.gnome.shell enabled-extensions)
-    if [[ "$CURRENT_EXTS" != *"$UUID"* ]]; then
+if [ ! -d "$HOME/.local/share/gnome-shell/extensions/${UUID}" ]; then
+    GNOME_VER=$(gnome-shell --version | grep -oP '\d+' | head -n1)
+    DOWNLOAD_URI=$(curl -s "https://extensions.gnome.org/extension-info/?uuid=${UUID}&shell_version=${GNOME_VER}" | jq -r '.download_url')
+
+    if [ -n "$DOWNLOAD_URI" ] && [ "$DOWNLOAD_URI" != "null" ]; then
+        curl -sL "https://extensions.gnome.org${DOWNLOAD_URI}" -o "/tmp/${UUID}.zip"
+        gnome-extensions install --force "/tmp/${UUID}.zip"
+        rm -f "/tmp/${UUID}.zip"
+    else
+        echo "Media Controller is not available, skipping..."
+    fi 
+else
+    echo "Media Controller already installed, skipping..."
+fi
+
+# Inject Media Controller directly into the database
+CURRENT_EXTS=$(gsettings get org.gnome.shell enabled-extensions)
+if [[ "$CURRENT_EXTS" != *"$UUID"* ]]; then
+    if [ "$CURRENT_EXTS" = "@as []" ] || [ "$CURRENT_EXTS" = "[]" ]; then
+        gsettings set org.gnome.shell enabled-extensions "['${UUID}']"
+    else
         gsettings set org.gnome.shell enabled-extensions "${CURRENT_EXTS%]*}, '${UUID}']"
     fi
-else
-    echo "Media Controller is not available, skipping..."
-fi 
+fi
 
 {{- else }}
-echo "Bluefin not detected, skipping GNOME configuration."
+echo "Bluefin not detected, skipping..."
 {{- end }}
