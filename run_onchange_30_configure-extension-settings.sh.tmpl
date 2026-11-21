@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+set -uo pipefail
+
+# Chezmoi hash trigger
+{{- if contains "Bluefin" .chezmoi.osRelease.name }}
+echo "Bluefin detected, applying GNOME extension preferences..."
+
+# Warn against unsupported or missing keys
+gset() {
+    if ! gsettings "$@" 2>/dev/null; then
+        echo "Warning, unsupported or missing key: gsettings $*" >&2
+    fi
+}
+
+#----------System----------#
+
+gset set org.gnome.desktop.interface color-scheme 'prefer-dark'
+gset set org.gnome.desktop.interface accent-color 'purple'
+gset set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
+gset set org.gnome.desktop.interface enable-hot-corners true
+gset set org.gnome.settings-daemon.plugins.color night-light-enabled true
+
+#----------Media Controller----------#
+
+MC_SCHEMA="$HOME/.local/share/gnome-shell/extensions/media-controller@naimur/schemas"
+
+gset --schemadir "$MC_SCHEMA" set org.gnome.shell.extensions.media-controller last-announced-version '999'
+gset --schemadir "$MC_SCHEMA" set org.gnome.shell.extensions.media-controller show-shuffle true
+
+#----------Dash to Dock----------#
+
+DTD_SCHEMA="/usr/share/gnome-shell/extensions/dash-to-dock@micxgx.gmail.com/schemas"
+
+gset --schemadir "$DTD_SCHEMA" set org.gnome.shell.extensions.dash-to-dock multi-monitor true
+gset --schemadir "$DTD_SCHEMA" set org.gnome.shell.extensions.dash-to-dock dock-fixed false
+gset --schemadir "$DTD_SCHEMA" set org.gnome.shell.extensions.dash-to-dock require-pressure-to-show false
+gset --schemadir "$DTD_SCHEMA" set org.gnome.shell.extensions.dash-to-dock extend-height true
+gset --schemadir "$DTD_SCHEMA" set org.gnome.shell.extensions.dash-to-dock always-center-icons true
+gset --schemadir "$DTD_SCHEMA" set org.gnome.shell.extensions.dash-to-dock show-apps-at-top true
+gset --schemadir "$DTD_SCHEMA" set org.gnome.shell.extensions.dash-to-dock show-mounts false
+gset --schemadir "$DTD_SCHEMA" set org.gnome.shell.extensions.dash-to-dock disable-overview-on-startup true
+gset --schemadir "$DTD_SCHEMA" set org.gnome.shell.extensions.dash-to-dock custom-theme-shrink false
+
+#----------Blur My Shell----------#
+
+BMS_SCHEMA="/usr/share/gnome-shell/extensions/blur-my-shell@aunetx/schemas"
+
+gset --schemadir "$BMS_SCHEMA" set org.gnome.shell.extensions.blur-my-shell.panel static-blur false
+gset --schemadir "$BMS_SCHEMA" set org.gnome.shell.extensions.blur-my-shell.panel sigma 20
+gset --schemadir "$BMS_SCHEMA" set org.gnome.shell.extensions.blur-my-shell.panel brightness 0.8
+
+gset --schemadir "$BMS_SCHEMA" set org.gnome.shell.extensions.blur-my-shell.dash-to-dock static-blur false
+gset --schemadir "$BMS_SCHEMA" set org.gnome.shell.extensions.blur-my-shell.dash-to-dock sigma 20
+gset --schemadir "$BMS_SCHEMA" set org.gnome.shell.extensions.blur-my-shell.dash-to-dock brightness 0.8
+
+gset --schemadir "$BMS_SCHEMA" set org.gnome.shell.extensions.blur-my-shell.applications blur true
+gset --schemadir "$BMS_SCHEMA" set org.gnome.shell.extensions.blur-my-shell.applications sigma 20
+gset --schemadir "$BMS_SCHEMA" set org.gnome.shell.extensions.blur-my-shell.applications brightness 0.8
+gset --schemadir "$BMS_SCHEMA" set org.gnome.shell.extensions.blur-my-shell.applications opacity 200
+gset --schemadir "$BMS_SCHEMA" set org.gnome.shell.extensions.blur-my-shell.applications dynamic-opacity true
+gset --schemadir "$BMS_SCHEMA" set org.gnome.shell.extensions.blur-my-shell.applications enable-all true
+
+gset --schemadir "$BMS_SCHEMA" set org.gnome.shell.extensions.blur-my-shell.popup blur true
+gset --schemadir "$BMS_SCHEMA" set org.gnome.shell.extensions.blur-my-shell.popup sigma 20
+gset --schemadir "$BMS_SCHEMA" set org.gnome.shell.extensions.blur-my-shell.popup brightness 0.8
+
+#----------Completion----------#
+
+{{- end }}
+exit 0

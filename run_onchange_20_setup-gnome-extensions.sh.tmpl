@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -uo pipefail
 
 # Chezmoi hash trigger
 {{- if contains "Bluefin" .chezmoi.osRelease.name }}
 echo "Bluefin detected, configuring GNOME extensions..."
+
+#----------Extensions----------#
 
 EXTENSIONS=(
   "appindicatorsupport@rgcjonas.gmail.com"
@@ -23,34 +25,43 @@ for ext in "${EXTENSIONS[@]}"; do
   fi
 done
 
-# Fetch, install and enable the latest Media Controller
+#----------Media Controller----------#
+
 UUID="media-controller@naimur"
+EXT_DIR="$HOME/.local/share/gnome-shell/extensions/${UUID}"
 
-if [ ! -d "$HOME/.local/share/gnome-shell/extensions/${UUID}" ]; then
-    GNOME_VER=$(gnome-shell --version | grep -oP '\d+' | head -n1)
-    DOWNLOAD_URI=$(curl -s "https://extensions.gnome.org/extension-info/?uuid=${UUID}&shell_version=${GNOME_VER}" | jq -r '.download_url')
-
-    if [ -n "$DOWNLOAD_URI" ] && [ "$DOWNLOAD_URI" != "null" ]; then
-        curl -sL "https://extensions.gnome.org${DOWNLOAD_URI}" -o "/tmp/${UUID}.zip"
-        gnome-extensions install --force "/tmp/${UUID}.zip"
-        rm -f "/tmp/${UUID}.zip"
+# Install and enable the latest Media Controller
+if [ ! -d "$EXT_DIR" ]; then
+    GNOME_RAW=$(gnome-shell --version)
+    GNOME_VER=$(echo "$GNOME_RAW" | sed -E 's/[^0-9]*([0-9]+).*/\1/')
+    DOWNLOAD_URI=$(curl -fsSL "https://extensions.gnome.org/extension-info/?uuid=${UUID}&shell_version=${GNOME_VER}" 2>/dev/null | jq -r '.download_url // empty' 2>/dev/null || true)
+    if [ -n "$DOWNLOAD_URI" ]; then
+        if curl -fsSL "https://extensions.gnome.org${DOWNLOAD_URI}" -o "/tmp/${UUID}.zip"; then
+            gnome-extensions install --force "/tmp/${UUID}.zip" || echo "Failed to install ${UUID}, skipping..."
+            rm -f "/tmp/${UUID}.zip"
+        fi
     else
-        echo "Media Controller is not available, skipping..."
-    fi 
+        echo "Media Controller is not available for GNOME ${GNOME_VER}, skipping..."
+    fi
 else
     echo "Media Controller already installed, skipping..."
 fi
 
-# Inject Media Controller directly into the database
-CURRENT_EXTS=$(gsettings get org.gnome.shell enabled-extensions)
-if [[ "$CURRENT_EXTS" != *"$UUID"* ]]; then
-    if [ "$CURRENT_EXTS" = "@as []" ] || [ "$CURRENT_EXTS" = "[]" ]; then
-        gsettings set org.gnome.shell enabled-extensions "['${UUID}']"
-    else
-        gsettings set org.gnome.shell enabled-extensions "${CURRENT_EXTS%]*}, '${UUID}']"
+# Inject Media Controller into the extensions database
+if [ -d "$EXT_DIR" ]; then
+    CURRENT_EXTS=$(gsettings get org.gnome.shell enabled-extensions)
+    if [[ "$CURRENT_EXTS" != *"$UUID"* ]]; then
+        if [ "$CURRENT_EXTS" = "@as []" ] || [ "$CURRENT_EXTS" = "[]" ]; then
+            gsettings set org.gnome.shell enabled-extensions "['${UUID}']"
+        else
+            gsettings set org.gnome.shell enabled-extensions "${CURRENT_EXTS%]*}, '${UUID}']"
+        fi
     fi
 fi
+
+#----------Completion----------#
 
 {{- else }}
 echo "Bluefin not detected, skipping..."
 {{- end }}
+exit 0
