@@ -21,6 +21,12 @@ gset set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
 gset set org.gnome.desktop.interface enable-hot-corners true
 gset set org.gnome.settings-daemon.plugins.color night-light-enabled true
 
+#----------Interface----------#
+
+gset set org.gnome.shell favorite-apps "['org.gnome.Ptyxis.desktop', 'org.gnome.Nautilus.desktop', 'org.mozilla.firefox.desktop', 'com.spotify.Client.desktop', 'steam.desktop', 'md.obsidian.Obsidian.desktop', 'io.github.kolunmi.Bazaar.desktop']"
+gset set org.gnome.desktop.app-folders.folder:/org/gnome/desktop/app-folders/folders/Development/ excluded-apps "['com.vscodium.codium.desktop']"
+gset reset org.gnome.shell app-picker-layout
+
 #----------Media Controller----------#
 
 MC_SCHEMA="$HOME/.local/share/gnome-shell/extensions/media-controller@naimur/schemas"
